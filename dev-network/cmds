@@ -1,0 +1,60 @@
+export PATH=/Users/shashankawasthi/Documents/fabric-samples/bin:$PATH
+
+export FABRIC_CFG_PATH=${PWD}/sampleconfig
+
+configtxgen -profile SampleDevModeSolo -channelID syschannel -outputBlock genesisblock -configPath $FABRIC_CFG_PATH -outputBlock "$(pwd)/sampleconfig/genesisblock"
+
+
+configtxgen -channelID ch1 -outputCreateChannelTx ch1.tx -profile SampleSingleMSPChannel -configPath $FABRIC_CFG_PATH
+
+docker-compose up
+
+-----channel creation
+
+switch to new tab
+
+export PATH=/Users/shashankawasthi/Documents/fabric-samples/bin:$PATH
+
+export FABRIC_CFG_PATH=${PWD}/sampleconfig
+
+peer channel create -o 127.0.0.1:7050 -c ch1 -f ch1.tx
+
+
+peer channel join -b ch1.block
+
+peer lifecycle chaincode package basic.tar.gz --path chaincode/chaincode-typescript/ --lang node --label mycc
+peer lifecycle chaincode package basic.tar.gz --path chaincode/hlf-digital-wallet-chaincode/ --lang node --label mycc
+
+Disable grpc thing in docker settings
+
+peer lifecycle chaincode install basic.tar.gz --peerAddresses localhost:7051
+
+peer lifecycle chaincode queryinstalled
+
+export CC_PACKAGE_ID=
+
+Navigate to folder containing package.json
+
+CORE_CHAINCODE_LOGLEVEL=debug CORE_PEER_ADDRESS=127.0.0.1:7052 CORE_PEER_TLS_ENABLED=false CORE_CHAINCODE_ID_NAME=$CC_PACKAGE_ID node_modules/.bin/fabric-chaincode-node start --peer.address 127.0.0.1:7052
+
+open new tab
+export PATH=/Users/shashankawasthi/Documents/fabric-samples/bin:$PATH
+
+export FABRIC_CFG_PATH=${PWD}/sampleconfig
+
+export CC_PACKAGE_ID=mycc:9003d021f56171455e1a10e02a13a36b0962e6f77d5412d4900b980ce5e4e7fc
+
+peer lifecycle chaincode approveformyorg -o localhost:7050 --channelID ch1 --name mycc --version 1.0 --sequence 1  --init-required --signature-policy "OR ('SampleOrg.member')" --package-id $CC_PACKAGE_ID 
+
+peer lifecycle chaincode checkcommitreadiness --channelID ch1 --name mycc --version 1.0 --sequence 1 --init-required --signature-policy "OR ('SampleOrg.member')" --output json
+
+peer lifecycle chaincode commit -o localhost:7050  --channelID ch1 --name mycc --version 1.0 --sequence 1 --init-required --signature-policy "OR ('SampleOrg.member')" --peerAddresses localhost:7051
+
+peer chaincode invoke -o localhost:7050 -C ch1 -n mycc --peerAddresses localhost:7051   -c '{"function":"Init","Args":[]}'
+
+for first method invoke use --isInit flag at last
+peer chaincode invoke -o localhost:7050 -C ch1 -n mycc --peerAddresses localhost:7051 -c '{"function":"Init","Args":[]}' --isInit
+
+
+
+peer chaincode invoke -o localhost:7050 -C ch1 -n mycc --peerAddresses localhost:7051 -c '{"function":"CreateCertifiacte","Args":["1234","Sure","Male","DOB","sdfvs","","","","","","","","","","","","",""]}'
